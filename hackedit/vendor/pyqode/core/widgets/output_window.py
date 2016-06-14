@@ -375,11 +375,23 @@ class OutputWindow(CodeEdit):
         self.setReadOnly(True)
         self.process_finished.emit()
 
+    def _decode(self, data):
+        for encoding in ['utf-8', 'cp850', 'cp1252', 'ascii']:
+            try:
+                string = data.decode(encoding)
+            except UnicodeDecodeError:
+                _logger().debug('failed to decode output with encoding=%r', encoding)
+                continue
+            else:
+                _logger().debug('decoding output with encoding=%r succeeded', encoding)
+                return string
+        return str(data).replace("b'", '')[:-1].replace('\\r', '\r').replace('\\n', '\n').replace('\\\\', '\\')
+
     def _read_stdout(self):
         """
         Reads the child process' stdout and process it.
         """
-        output = self._process.readAllStandardOutput().data().decode()
+        output = self._decode(self._process.readAllStandardOutput().data())
         if self._formatter:
             self._formatter.append_message(output, output_format=OutputFormat.NormalMessageFormat)
         else:
@@ -389,7 +401,7 @@ class OutputWindow(CodeEdit):
         """
         Reads the child process' stderr and process it.
         """
-        output = self._process.readAllStandardError().data().decode()
+        output = self._decode(self._process.readAllStandardError().data())
         if self._formatter:
             self._formatter.append_message(output, output_format=OutputFormat.ErrorMessageFormat)
         else:
@@ -974,7 +986,7 @@ class BufferedInputHandler(InputHandler):
             return False
         if event.key() in [QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter]:
             # send the user input to the child process
-            if self.edit.flg_use_pty:
+            if self.edit.flg_use_pty or 'cmd.exe' in self.process.program():
                 # remove user buffer from text edit, the content of the buffer will be
                 # drawn as soon as we write it to the process stdin
                 tc = self.edit.textCursor()
@@ -987,7 +999,7 @@ class BufferedInputHandler(InputHandler):
             self._input_buffer += "\n"
             self.process.write(self._input_buffer.encode())
             self._input_buffer = ""
-            if self.edit.flg_use_pty:
+            if self.edit.flg_use_pty or 'cmd.exe' in self.process.program():
                 ignore = True
         else:
             if not delete and len(event.text()):
