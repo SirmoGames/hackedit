@@ -327,12 +327,21 @@ class MainWindow(QtWidgets.QMainWindow):
         :return The dock widget instance that was added to the window.
         """
         _logger().debug('adding dock widget %r to %r', title, self)
+
+        class DockWidget(QtWidgets.QDockWidget):
+            """
+            Forces focus on the child widget when the dock is shown.
+            """
+            def showEvent(self, ev):
+                super().showEvent(ev)
+                self.widget().setFocus()
+
         if area is None:
             area = QtCore.Qt.BottomDockWidgetArea
         if system.PLASMA_DESKTOP:
             title = title.replace('&', '')
             title = title[:-1] + '&' + title[-1]
-        dock = QtWidgets.QDockWidget(title, self)
+        dock = DockWidget(title, self)
         dock.setShortcutEnabled(False)
         dock.setObjectName('dock%s' % title)
         dock.setWidget(widget)
@@ -373,7 +382,7 @@ class MainWindow(QtWidgets.QMainWindow):
         :param line: column to go to (optional).
         """
         path = os.path.normpath(path)
-        if not os.path.exists(path):
+        if not os.path.exists(path) or os.path.isdir(path):
             return None
         self.about_to_open_tab.emit(path)
         color_scheme = settings.color_scheme()
@@ -1136,10 +1145,10 @@ class MainWindow(QtWidgets.QMainWindow):
             _logger().debug('no ExtendedSelectionMode on widget %r', editor)
         else:
             m.action_select_word.setShortcut(shortcuts.get(
-                'Select word', _('Select word'), 'Ctrl+W'))
+                'Select word', _('Select word'), 'Ctrl+Alt+J'))
             m.action_select_extended_word.setShortcut(shortcuts.get(
                 'Select extended word', _('Select extended word'),
-                'Ctrl+Shift+W'))
+                'Ctrl+Shift+J'))
             m.action_select_matched.setShortcut(shortcuts.get(
                 'Matched select', _('Matched select'), 'Ctrl+E'))
             m.action_select_line.setShortcut(shortcuts.get(

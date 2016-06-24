@@ -2,12 +2,12 @@
 Provides a simplified access to the common application settings (not specific
 to a plugin).
 """
-import getpass
 import locale
 import logging
 import os
 
 from PyQt5 import QtCore, QtWidgets
+from pyqode.core.modes import CodeCompletionMode
 from pyqode.core.widgets import FileSystemContextMenu
 
 
@@ -373,7 +373,7 @@ def set_indexing_enabled(value):
 # Editor settings
 # -----------------------------------------------------------------------------
 def margin_position():
-    return int(_SETTINGS.value('editor/margin_position', 79))
+    return int(_SETTINGS.value('editor/margin_position', 119))
 
 
 def set_margin_position(val):
@@ -497,7 +497,7 @@ def set_cc_trigger_len(val):
 
 
 def cc_filter_mode():
-    return int(_SETTINGS.value('editor/cc_filter_mode', 0))
+    return int(_SETTINGS.value('editor/cc_filter_mode', CodeCompletionMode.FILTER_FUZZY))
 
 
 def set_cc_filter_mode(val):
@@ -597,7 +597,7 @@ def color_scheme():
     """
     Gets the color scheme to use.
 
-    The color scheme defines the color of the editor widgets and the IPython plugin colors.
+    The color scheme defines the color of the editor widgets and the Python console.
 
     :return: Color scheme name.
     """
